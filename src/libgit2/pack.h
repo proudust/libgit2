@@ -79,8 +79,18 @@ struct pack_chain_elem {
 
 typedef git_array_t(struct pack_chain_elem) git_dependency_chain;
 
-#define GIT_PACK_CACHE_MEMORY_LIMIT 16 * 1024 * 1024
-#define GIT_PACK_CACHE_SIZE_LIMIT 1024 * 1024 /* don't bother caching anything over 1MB */
+/*
+ * Changed by duckdb-git (proudust) on 2026-07-10, per GPLv2 section 2(a):
+ * raised from the upstream defaults (16MB / 1MB, "don't bother caching
+ * anything over 1MB") to match core git's DEFAULT_DELTA_BASE_CACHE_LIMIT
+ * (96MB, no per-object cap; see pack-objects.h in git/git). The 1MB per-object
+ * cap meant any delta chain built on a >1MB base (e.g. successive revisions of
+ * a large lockfile) was fully re-inflated from scratch on every read. Measured
+ * on a 4625-commit repo with many >1MB blobs: with_diff bench, libgit backend,
+ * t1 -14% / t2 -24% / t4 -33% wall time vs the stock 16MB/1MB limits.
+ */
+#define GIT_PACK_CACHE_MEMORY_LIMIT 96 * 1024 * 1024
+#define GIT_PACK_CACHE_SIZE_LIMIT 96 * 1024 * 1024
 
 struct git_pack_entry {
 	off64_t offset;
